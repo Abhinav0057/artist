@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+import datetime
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,21 +27,48 @@ SECRET_KEY = 'django-insecure-uhh1(c2te77=a5))05b!gc&qs*ee=fb)pd^lp&qiy$^#+s_q39
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+SECRET_KEY = "env_config('SECRET_KEY')"
+DEBUG = True
+SECURE_HSTS_SECONDS = 31536000
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_CONTENT_TYPE_NOSNIFF = False
+SECURE_SSL_REDIRECT = False
+SECURE_HSTS_PRELOAD = False
+JWT_SECRET_KEY = "env_config('JWT_SECRET_KEY')"
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'user',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'artist',
+    'corsheaders',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
+       
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'artistbackend.pagination.MycustomPagination',
+}
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -49,7 +78,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_EXPOSE_HEADERS = ["*"]
+
 ROOT_URLCONF = 'artistbackend.urls'
+
+
 
 TEMPLATES = [
     {
@@ -83,6 +117,8 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
+AUTH_USER_MODEL = 'user.User'
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
