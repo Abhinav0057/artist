@@ -12,8 +12,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import make_password
 from django.db import connection
 import datetime
-from .utils import dictFromQuery
+from .utils import dictFromQuery,register_user
 from  artistbackend.pagination import MycustomPagination
+from user.permissions import *
 
 
 
@@ -77,7 +78,7 @@ class UserView(APIView):
         return Response(res, status=status.HTTP_200_OK)
         
 class GetUserList(APIView):
-    permission_classes=(IsAuthenticated,)
+    permission_classes=(IsAuthenticated,IsSuperAdmin|IsArtistManager,)
     
     def get(self,request):
         try:
@@ -120,17 +121,18 @@ class GetUserList(APIView):
     
 			
 class RegisterUser(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,IsSuperAdmin,)
     def post(self,request):
         data = request.data
         try:
             serializer = CreateUserSerializer(data=data)
             if serializer.is_valid():
-                now = datetime.datetime.now()
-                password = make_password(data['password'])
-                cursor = connection.cursor()
-                query = 'insert into user (email, password, dob,role_type,is_superuser,is_staff,is_active, first_name, last_name, address, phone, gender,created_at, updated_at,is_active) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);'
-                cursor.execute(query,[data["email"], str(password),data["dob"], data["role_type"],"0","0","1",data["first_name"],data["last_name"],data["address"],data["phone"],data["gender"],str(now),str(now),'1'])
+                user_id=register_user(data)
+                # now = datetime.datetime.now()
+                # password = make_password(data['password'])
+                # cursor = connection.cursor()
+                # query = 'insert into user (email, password, dob,role_type,is_superuser,is_staff,is_active, first_name, last_name, address, phone, gender,created_at, updated_at,is_active) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);'
+                # cursor.execute(query,[data["email"], str(password),data["dob"], data["role_type"],"0","0","1",data["first_name"],data["last_name"],data["address"],data["phone"],data["gender"],str(now),str(now),'1'])
                 data_ = serializer.data
                 message = "Successfully Created host"
                 status_code = status.HTTP_201_CREATED
@@ -147,6 +149,7 @@ class RegisterUser(APIView):
     
 
 class EditUser(APIView):
+    permission_classes = (IsAuthenticated,IsSuperAdmin,)
     def post(self,request, pk):
         if request.user.role_type == 'super_admin':
             users = User.objects.get(id=pk)
@@ -165,7 +168,8 @@ class EditUser(APIView):
             
             
 class DeleteUser(APIView):
-    permission_classes = (IsAuthenticated,)
+    # note: added permission based on roles
+    permission_classes = (IsAuthenticated,IsSuperAdmin,)
     def post(self,request,pk):
         if request.user.role_type == 'super_admin':
             cursor = connection.cursor()
