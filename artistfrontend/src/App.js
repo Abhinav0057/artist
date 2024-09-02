@@ -1,25 +1,51 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-function App() {
+// Import Routes
+import { userRoutes, authRoutes } from "./routes/allRoutes";
+
+// Layouts
+
+import AuthLayout from "./components/AuthLayout";
+import NonAuthLayout from "./components/NonAuthLayout";
+
+// Middleware
+import Authmiddleware from "./routes/middleware/Authmiddleware";
+
+const App = (props) => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <React.Fragment>
+      <Routes>
+        {authRoutes.map((route, idx) => (
+          <Route
+            key={idx}
+            path={route.path}
+            element={
+              <Authmiddleware
+                component={route.component}
+                layout={NonAuthLayout}
+                isAuthProtected={false}
+              />
+            }
+          />
+        ))}
+
+        {userRoutes.map((route, idx) => (
+          <Route
+            key={idx}
+            path={route.path}
+            element={
+              <Authmiddleware
+                component={route.component}
+                layout={AuthLayout}
+                isAuthProtected={true}
+              />
+            }
+          />
+        ))}
+      </Routes>
+    </React.Fragment>
   );
-}
+};
 
 export default App;
