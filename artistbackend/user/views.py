@@ -38,7 +38,7 @@ class CreateUser(APIView):
                 password = make_password(data['password'])
                 cursor = connection.cursor()
                 query = 'insert into user (email, password, dob,role_type,is_superuser,is_staff,is_active, first_name, last_name, address, phone, gender,created_at, updated_at,is_active) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);'
-                cursor.execute(query,[data["email"], str(password),data["dob"], 'artist',"0","0","1",data["first_name"],data["last_name"],data["address"],data["phone"],data["gender"],str(now),str(now),'1'])
+                cursor.execute(query,[data["email"], str(password),data["dob"], 'super_admin',"0","0","1",data["first_name"],data["last_name"],data["address"],data["phone"],data["gender"],str(now),str(now),'1'])
                 data_ = serializer.data
                 message = "Successfully Created host"
                 status_code = status.HTTP_201_CREATED

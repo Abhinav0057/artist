@@ -66,7 +66,7 @@ const Login = (props) => {
   return (
     <React.Fragment>
       <title>Login</title>
-      <div className="account-pages my-5 pt-sm-5">
+      <div className="account-pages my-2 pt-sm-5">
         <Container>
           <Row className="justify-content-center">
             <Col md={8} lg={6} xl={5}>
@@ -84,20 +84,30 @@ const Login = (props) => {
                       id="custom-modal-form"
                     >
                       <div className="mb-3">
-                        <label className=" col-form-label  fw-bold fs-6">
+                        <label className="col-form-label fw-bold fs-6">
                           Email
                         </label>
                         <input
-                          type="email"
+                          type=""
                           style={{
                             border: errors?.email ? "1px solid red" : "",
                           }}
                           {...register("email", {
-                            required: " required",
+                            required: "Email is required",
+                            pattern: {
+                              value:
+                                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                              message: "Invalid email address",
+                            },
                           })}
                           name="email"
-                          className="form-control form-control form-control-solid"
+                          className="form-control form-control-solid"
                         />
+                        {errors.email && (
+                          <p style={{ color: "red", marginTop: "5px" }}>
+                            {errors.email.message}
+                          </p>
+                        )}
                       </div>
                       <div className="mb-3">
                         <label className=" col-form-label  fw-bold fs-6">
@@ -109,11 +119,16 @@ const Login = (props) => {
                             border: errors?.password ? "1px solid red" : "",
                           }}
                           {...register("password", {
-                            required: " required",
+                            required: " Password is rquried",
                           })}
                           name="password"
                           className="form-control form-control form-control-solid"
                         />
+                        {errors.password && (
+                          <p style={{ color: "red", marginTop: "5px" }}>
+                            {errors.password.message}
+                          </p>
+                        )}
                       </div>
 
                       <div className="mb-3 row mt-4">
@@ -134,9 +149,8 @@ const Login = (props) => {
                       </div>
                       <div className="form-group mb-0 row">
                         <div className="col-12 mt-4">
-                          <Link to="/forgot-password" className=" text-white">
-                            <i className="mdi mdi-lock"></i> Forgot your
-                            password?
+                          <Link to="/signup" className="">
+                            Register as Super Admin?
                           </Link>
                         </div>
                       </div>
