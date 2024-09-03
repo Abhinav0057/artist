@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useLocation } from "react-router-dom";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Container,
@@ -10,27 +11,65 @@ import {
   Spinner,
   Alert,
 } from "reactstrap";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { useSignIn } from "../../services/fetchers/auth/auth";
+import { useGetUserProfile } from "../../services/fetchers/auth/auth";
+import {
+  useRegisterUser,
+  useUpdateeUser,
+} from "../../services/fetchers/users/users";
 
 const Signin = () => {
-  const { mutateAsync, error, mutate, isError, isLoading } = useSignIn();
+  const { mutateAsync, isLoading } = useSignIn();
+  const { mutateAsync: mutateAsyncRegisterUser, isLoading: isLoading1 } =
+    useRegisterUser();
+  const { mutateAsync: mutateAsyncUpdateUser, isLoading: isLoading2 } =
+    useUpdateeUser();
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
+    setValue,
   } = useForm();
+  const location = useLocation();
+  const { userData } = location.state || {};
+  React.useEffect(() => {
+    if (userData?.id) {
+      setValue("id", userData.id);
+      setValue("email", userData.email);
+      setValue("role_type", userData.role_type);
+      setValue("first_name", userData.first_name);
+      setValue("last_name", userData.last_name);
+      setValue("phone", userData.phone);
+      setValue("dob", userData.dob);
+      setValue("gender", userData.gender);
+      setValue("address", userData.address);
+    }
+  }, [userData, setValue]);
 
   const navigate = useNavigate();
-
+  const userProfile = useGetUserProfile();
   const onSubmit = async (data) => {
     try {
-      // let payloadData = { ...data, role_type: "super_admin" }; nte: handled in be
-      const responseData = await mutateAsync(data);
-      toast.success("Successfully registered!");
-      navigate("/login");
+      if (
+        userProfile?.isSuccess &&
+        userProfile.data?.role_type === "super_admin"
+      ) {
+        if (data?.id) {
+          const responseData = await mutateAsyncUpdateUser(data);
+          toast.success("Updated successfully!");
+          navigate("/users");
+        } else {
+          const responseData = await mutateAsyncRegisterUser(data);
+          toast.success("Successfully registered!");
+          navigate("/users");
+        }
+      } else {
+        const responseData = await mutateAsync(data);
+        toast.success("Successfully registered!");
+        navigate("/login");
+      }
     } catch (error) {
       if (error.response && error.response.data.data) {
         const serverErrors = error.response.data.data;
@@ -53,7 +92,9 @@ const Signin = () => {
           <Col md={10} lg={8} xl={6}>
             <Card className="overflow-hidden">
               <CardBody className="pt-0">
-                <h3 className="text-center mt-5 mb-4">Register</h3>
+                <h3 className="text-center mt-5 mb-4">
+                  {userData?.id ? "Update User" : "Register"}
+                </h3>
                 <div className="p-1">
                   <form onSubmit={handleSubmit(onSubmit)}>
                     <Row>
@@ -89,33 +130,35 @@ const Signin = () => {
                           )}
                         </div>
                       </Col>
-                      <Col>
-                        <div className="mb-3">
-                          <label className="col-form-label fw-bold fs-6">
-                            Password
-                          </label>
-                          <input
-                            type="password"
-                            className="form-control form-control-solid"
-                            {...register("password", {
-                              required: "Password is required",
-                            })}
-                            style={{
-                              border: errors?.password ? "1px solid red" : "",
-                            }}
-                          />
-                          {errors.password && (
-                            <p style={{ color: "red", marginTop: "5px" }}>
-                              {errors.password.message}
-                            </p>
-                          )}
-                          {errors.password && (
-                            <p style={{ color: "red", marginTop: "5px" }}>
-                              {errors.password[0]}
-                            </p>
-                          )}
-                        </div>
-                      </Col>
+                      {!userData?.id && (
+                        <Col>
+                          <div className="mb-3">
+                            <label className="col-form-label fw-bold fs-6">
+                              Password
+                            </label>
+                            <input
+                              type="password"
+                              className="form-control form-control-solid"
+                              {...register("password", {
+                                required: "Password is required",
+                              })}
+                              style={{
+                                border: errors?.password ? "1px solid red" : "",
+                              }}
+                            />
+                            {errors.password && (
+                              <p style={{ color: "red", marginTop: "5px" }}>
+                                {errors.password.message}
+                              </p>
+                            )}
+                            {errors.password && (
+                              <p style={{ color: "red", marginTop: "5px" }}>
+                                {errors.password[0]}
+                              </p>
+                            )}
+                          </div>
+                        </Col>
+                      )}
                     </Row>
 
                     <Row>
@@ -292,29 +335,73 @@ const Signin = () => {
                         </div>
                       </Col>
                     </Row>
+                    {userProfile?.isSuccess &&
+                      userProfile.data?.role_type === "super_admin" && (
+                        <Row>
+                          <Col>
+                            <div className="mb-3">
+                              <label className="col-form-label fw-bold fs-6">
+                                Role Type
+                              </label>
+                              <select
+                                className="form-control form-control-solid"
+                                {...register("role_type", {
+                                  required: "Role is required",
+                                })}
+                                style={{
+                                  border: errors?.role_type
+                                    ? "1px solid red"
+                                    : "",
+                                }}
+                              >
+                                <option value="">Select Role</option>
+                                <option value="super_admin">Super Admin</option>
+                                <option value="artist_manager">
+                                  Artist Manager
+                                </option>
+                                <option value="artist">Artist</option>
+                              </select>
+                              {errors.role_type && (
+                                <p style={{ color: "red", marginTop: "5px" }}>
+                                  {errors.role_type.message}
+                                </p>
+                              )}
+                              {errors.role_type && (
+                                <p style={{ color: "red", marginTop: "5px" }}>
+                                  {errors.role_type[0]}
+                                </p>
+                              )}
+                            </div>
+                          </Col>
+                        </Row>
+                      )}
 
                     <div className="d-flex justify-content-center mt-4">
                       <button
                         className="btn btn-primary btn-lg"
                         type="submit"
-                        disabled={isLoading}
+                        disabled={isLoading || isLoading1 || isLoading2}
                       >
-                        {isLoading ? (
+                        {isLoading || isLoading1 || isLoading2 ? (
                           <>
-                            <Spinner size="sm" color="light" /> Registering...
+                            <Spinner size="sm" color="light" />
                           </>
+                        ) : userData?.id ? (
+                          "Update"
                         ) : (
                           "Register"
                         )}
                       </button>
                     </div>
-                    <div className="form-group mb-0 row">
-                      <div className="col-12 mt-4">
-                        <Link to="/login" className="">
-                          Login?
-                        </Link>
+                    {!userProfile?.isSuccess && (
+                      <div className="form-group mb-0 row">
+                        <div className="col-12 mt-4">
+                          <Link to="/login" className="">
+                            Login?
+                          </Link>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </form>
                 </div>
               </CardBody>

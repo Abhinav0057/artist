@@ -18,6 +18,7 @@ const userRoutes = [
   { path: "/", component: Dashboard },
   { path: "/dashboard", component: Dashboard },
   { path: "/users", component: User },
+  { path: "/user/register", component: Signin },
   //   {
   //     path: "/all-users",
   //     component: allUserList,

@@ -95,7 +95,7 @@ class GetUserList(APIView):
                     
                     cursor.execute("""
                             select id, email, role_type, first_name, last_name, phone, dob,gender,address from user where is_active=1 and  id!=%s
-                            order BY id asc
+                            order BY -id 
                             limit %s offset %s
                         """, [request.user.id,page_size, offset])
                 else:
@@ -105,7 +105,7 @@ class GetUserList(APIView):
                     
                     cursor.execute("""
                             select id, email, role_type, first_name, last_name, phone, dob,gender,address from user where is_active=1 and  id!=%s and role_type in ('artist manager','artist')
-                            order BY id asc
+                            order BY -id 
                             limit %s offset %s
                         """, [request.user.id,page_size, offset])
                     
