@@ -10,4 +10,10 @@ export const api = {
     editUser: "edit/user/{:id}/",
     deleteUser: "delete/user/{:id}/",
   },
+  artist: {
+    getArtistList: "get/artist/list/",
+    registerArtist: "register/user/",
+    editArtist: "edit/user/{:id}/",
+    deleteArtist: "delete/artist/{:id}/",
+  },
 };

@@ -10,6 +10,7 @@ import User from "../pages/User/User";
 
 import Pages404 from "../pages/ExtraPages/Pages404";
 import Signin from "../pages/Authentication/Signin";
+import Artist from "../pages/Artist/Artist";
 
 // Clients
 // import ClientList from "components/components/clients/ClientList"
@@ -18,6 +19,7 @@ const userRoutes = [
   { path: "/", component: Dashboard },
   { path: "/dashboard", component: Dashboard },
   { path: "/users", component: User },
+  { path: "/artists", component: Artist },
   { path: "/user/register", component: Signin },
   //   {
   //     path: "/all-users",

@@ -73,14 +73,13 @@ class UpdateArtist(APIView):
 
 class DeleteArtist(APIView):
 	permission_classes = (permissions.IsAuthenticated,IsArtistManager)
-	def post(self,request):
-		artist_id = request.data["id"]
+	def post(self,request,pk):
+		artist_id = pk
 		cursor = connection.cursor()
-		query = "Delete from music where artist_id="+str(artist_id)+";"
-		cursor.execute(query)
-		query = "Delete from artist where id="+str(artist_id)+";"
-		
-		cursor.execute(query)
+		query = "Delete from music where artist_id= %s"
+		cursor.execute(query,[pk])
+		query = "Delete from artist where id= %s"
+		cursor.execute(query,[pk])
 		return Response({"message":"Data deleted successfully"},status=status.HTTP_200_OK)
 
 
