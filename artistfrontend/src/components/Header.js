@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 
 import { Link } from "react-router-dom";
-// import user1 from "../../public/logo192.png";
 
 // Reactstrap
 import { Dropdown, DropdownToggle, DropdownMenu } from "reactstrap";
+import {useGetUserProfile} from "../services/fetchers/auth/auth"
 
 const Header = (props) => {
   const [menu, setMenu] = useState(false);
 
   const [username, setusername] = useState("Admin");
+
+  const userProfile=useGetUserProfile()
 
   const handleLogoutHandler = () => {
     localStorage.setItem("token", "");
@@ -23,11 +25,29 @@ const Header = (props) => {
       <header id="page-topbar" class="border border-secondary">
         <div class="navbar-header w-100">
           <div class="d-flex justify-content-between align-items-center w-100 p-3">
-            <div class="navbar-brand-box">
-              <Link to="/" class="navbar-brand  fw-bold">
+            <div class="navbar-brand-box d-flex justify-content-between">
+              <Link to="/" class="navbar-brand px-3 fw-bold">
                 Artist Management
               </Link>
+
+             {userProfile?.isSuccess && <div className="d-flex  " >
+            {userProfile.data?.role_type==="super_admin" &&<div class="navbar-brand-box px-2">
+              <Link to="/users" class="navbar-brand">
+                Users
+              </Link>
             </div>
+              }
+            <div class="navbar-brand-box px-2">
+              <Link to="/artists" class="navbar-brand">
+                Artists
+              </Link>
+            </div>
+            </div>
+             }
+            </div>
+            
+       
+            
             <Dropdown
               isOpen={menu}
               toggle={() => setMenu(!menu)}
@@ -48,7 +68,7 @@ const Header = (props) => {
               </DropdownToggle>
               <DropdownMenu className="dropdown-menu-end">
                 <Link
-                  to="/login"
+                  onClick={handleLogoutHandler}
                   className="dropdown-item text-danger d-flex align-items-center"
                 >
                   <i class="mdi mdi-power me-2"></i>

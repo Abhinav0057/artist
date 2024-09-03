@@ -73,7 +73,7 @@ class UserView(APIView):
     def get(self, request, *args, **kwargs):
         cursor = connection.cursor()
         cursor.execute("select id, email, role_type, first_name, last_name, phone, dob,gender,address, is_superuser from user where id=%s and is_active=1 ",[str(request.user.id),])
-        data = dictFromQuery(cursor)
+        data = dictFromQuery(cursor)[0]
         res = {"data": data, "message": 'Fetched Successfully', "status": status.HTTP_200_OK}
         return Response(res, status=status.HTTP_200_OK)
         

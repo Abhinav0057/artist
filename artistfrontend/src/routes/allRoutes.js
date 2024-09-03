@@ -6,6 +6,7 @@ import Login from "../pages/Authentication/Login";
 
 // Dashboard
 import Dashboard from "../pages/Dashboard/index";
+import User from "../pages/User/User";
 
 import Pages404 from "../pages/ExtraPages/Pages404";
 import Signin from "../pages/Authentication/Signin";
@@ -16,6 +17,7 @@ import Signin from "../pages/Authentication/Signin";
 const userRoutes = [
   { path: "/", component: Dashboard },
   { path: "/dashboard", component: Dashboard },
+  { path: "/users", component: User },
   //   {
   //     path: "/all-users",
   //     component: allUserList,
