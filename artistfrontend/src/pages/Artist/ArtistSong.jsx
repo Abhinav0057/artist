@@ -2,7 +2,7 @@ import React from "react";
 
 import {
   useGetArtistSongList,
-  useDeleteArtist,
+  useDeleteSong,
 } from "../../services/fetchers/artist/artist";
 import ReactTable from "../../components/common/ReactTable";
 import { actions } from "react-table";
@@ -16,10 +16,10 @@ import { Link } from "react-router-dom";
 function Artist() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { mutateAsync, isLoading } = useDeleteArtist();
-  const handleCreateNewArtistHandler=async()=>{
+  const { mutateAsync, isLoading } = useDeleteSong();
+  const handleCreateNewArtistHandler = async () => {
     navigate("/artist/songs/create", { state: { userData: {} } });
-  }
+  };
 
   const handleDelete = async (rowData) => {
     const confirmed = window.confirm(
@@ -44,12 +44,12 @@ function Artist() {
   const userProfile = useGetUserProfile();
   const [currentPage, setCurrentPage] = React.useState(1);
   // useEffect(() => {
-    
+
   const artistlist = useGetArtistSongList(id);
-  console.log(artistlist?.data)
+  console.log(artistlist?.data);
   //  }, [currentPage]);
   if (artistlist?.data?.data?.length > 0) {
-    dataTableTemp = artistlist?.data?.data
+    dataTableTemp = artistlist?.data?.data;
   }
   const data = React.useMemo(() => [...dataTableTemp], [artistlist?.data]);
   const columnsTable = React.useMemo(
@@ -57,12 +57,13 @@ function Artist() {
       { Header: "ID", accessor: "id" },
       { Header: "Album Name", accessor: "album_name" },
       { Header: "Genre", accessor: "genre" },
+      { Header: "Title", accessor: "title" },
 
       {
         Header: "Actions",
         accessor: "actions",
         Cell: ({ row }) =>
-        
+          userProfile?.data?.role_type == "artist" && (
             <div>
               <button
                 className="btn btn-secondary"
@@ -81,7 +82,7 @@ function Artist() {
                 Delete
               </button>
             </div>
-      
+          ),
       },
     ],
     [data]
@@ -93,19 +94,18 @@ function Artist() {
   };
   return (
     <div className="p-2">
-      
       <h3> Artists List</h3>
       <div className="p-2">
         {userProfile?.isSuccess &&
-          ['artist'].includes(
-            userProfile.data?.role_type
-          ) && (
+          ["artist"].includes(userProfile.data?.role_type) && (
             <div className="d-flex justify-content-end">
-             
-                <button className="btn btn-primary " type="submit"  onClick={handleCreateNewArtistHandler}>
-                  Create new song
-                </button>
-              
+              <button
+                className="btn btn-primary "
+                type="submit"
+                onClick={handleCreateNewArtistHandler}
+              >
+                Create new song
+              </button>
             </div>
           )}
       </div>
@@ -115,7 +115,7 @@ function Artist() {
           columns={columnsTable}
           handlePageChange={handlePageChange}
           currentPage={1}
-          totalPages={artistlist?.data?.data?.length}
+          totalPages={1}
         ></ReactTable>
       )}
       {artistlist?.data?.data?.length == 0 && (

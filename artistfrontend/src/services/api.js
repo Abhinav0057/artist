@@ -18,5 +18,9 @@ export const api = {
     getArtistSongList: "get/artist/song/list/{:id}/",
     createSong: "create/artist/song/",
     editSong: "edit/artist/song/{:id}/",
+    deleteSong: "delete/artist/song/{:id}/",
+    sampleDownload: "get/sample/artist/",
+    getAll: "get/all/artist/",
+    bulkUploadArtist: "upload/bulk/artist/",
   },
 };

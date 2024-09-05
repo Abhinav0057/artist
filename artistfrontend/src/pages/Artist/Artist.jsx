@@ -3,6 +3,8 @@ import React from "react";
 import {
   useGetArtistList,
   useDeleteArtist,
+  getSampleArtistFile,
+  bulkUploadArtist,
 } from "../../services/fetchers/artist/artist";
 import ReactTable from "../../components/common/ReactTable";
 import { actions } from "react-table";
@@ -13,11 +15,16 @@ import { useGetUserProfile } from "../../services/fetchers/auth/auth";
 import { Link } from "react-router-dom";
 
 function Artist() {
+  const [file, setFile] = React.useState(null);
+
+  const onFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
   const navigate = useNavigate();
   const { mutateAsync, isLoading } = useDeleteArtist();
-  const handleCreateNewArtistHandler=async()=>{
-    navigate("/artist/register", { state: { userData: {},isArtist:true } });
-  }
+  const handleCreateNewArtistHandler = async () => {
+    navigate("/artist/register", { state: { userData: {}, isArtist: true } });
+  };
 
   const handleDelete = async (rowData) => {
     const confirmed = window.confirm(
@@ -35,11 +42,13 @@ function Artist() {
   };
   const handleEdit = (rowData) => {
     // console.log({ state: { userData: rowData,isArtist:true } })
-    navigate("/artist/register", { state: { userData: rowData,isArtist:true } });
+    navigate("/artist/register", {
+      state: { userData: rowData, isArtist: true },
+    });
   };
   const handleSongRedirect = (rowData) => {
     // console.log({ state: { userData: rowData,isArtist:true } })
-    navigate(`/artist/songs/${rowData.id}`)
+    navigate(`/artist/songs/${rowData.user_id}`);
   };
 
   let dataTableTemp = [];
@@ -64,7 +73,7 @@ function Artist() {
         Header: "Actions",
         accessor: "actions",
         Cell: ({ row }) =>
-          userProfile?.data?.role_type == "artist_manager" && (
+          userProfile?.data?.role_type == "artist_manager" ? (
             <div>
               <button
                 className="btn btn-secondary"
@@ -91,6 +100,17 @@ function Artist() {
                 Delete
               </button>
             </div>
+          ) : userProfile?.data?.role_type == "super_admin" ? (
+            <button
+              className="btn btn-secondary"
+              type="primary"
+              onClick={() => handleSongRedirect(row.original)}
+              style={{ marginRight: "5px", padding: "2px 5px" }}
+            >
+              Songs
+            </button>
+          ) : (
+            <></>
           ),
       },
     ],
@@ -110,11 +130,27 @@ function Artist() {
             userProfile.data?.role_type
           ) && (
             <div className="d-flex justify-content-end">
-             
-                <button className="btn btn-primary " type="submit"  onClick={handleCreateNewArtistHandler}>
-                  Create new artist
+              <button onClick={getSampleArtistFile}>Download Smple</button>
+              <button onClick={() => getSampleArtistFile(true)}>
+                Download Artists
+              </button>
+              <div>
+                <input type="file" onChange={onFileChange} />
+                <button
+                  onClick={() => {
+                    bulkUploadArtist(file);
+                  }}
+                >
+                  Upload
                 </button>
-              
+              </div>
+              <button
+                className="btn btn-primary "
+                type="submit"
+                onClick={handleCreateNewArtistHandler}
+              >
+                Create new artist
+              </button>
             </div>
           )}
       </div>

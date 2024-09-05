@@ -14,20 +14,66 @@ export const registerArtist = (body) => {
 const deleteArtist = (id) => {
   return httpClient.post(api.artist.deleteArtist.replace("{:id}", id));
 };
+const deleteSong = (id) => {
+  return httpClient.post(api.artist.deleteSong.replace("{:id}", id));
+};
 
 const updateArtist = (body) => {
   return httpClient.post(api.artist.editArtist.replace("{:id}", body.id), body);
 };
-const getArtistSongList=(id)=>()=>{
-  return httpClient.get(api.artist.getArtistSongList.replace("{:id}",id))
-}
+const getArtistSongList = (id) => () => {
+  return httpClient.get(api.artist.getArtistSongList.replace("{:id}", id));
+};
 export const createSong = (body) => {
   return httpClient.post(api.artist.createSong, body);
 };
 export const updateSong = (body) => {
-  return httpClient.post(api.artist.editSong.replace('{:id}',body.id), body);
+  return httpClient.post(api.artist.editSong.replace("{:id}", body.id), body);
+};
+export const getSampleArtistFile = async (isNotSample = false) => {
+  let url = api.artist.sampleDownload;
+  let fileName = "artistsample.csv";
+  if (isNotSample) {
+    url = api.artist.getAll;
+    fileName = "all_artists.csv";
+  }
+
+  await httpClient
+    .get(url)
+    .then((response) => {
+      var data = response.data;
+      var blob = new Blob([data], { type: "text/csv;charset=utf-8;" });
+
+      var link = document.createElement("a");
+      var url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", fileName);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      // this.UserData = response.data.data
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
+export const bulkUploadArtist = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = httpClient.post(api.artist.bulkUploadArtist, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    alert("Error uploading file");
+  }
+};
 
 export const useGetArtistList = (page) => {
   return useQuery([api.artist.getArtistList, page], getAllArtistList(page), {
@@ -94,6 +140,19 @@ export const useDeleteArtist = () => {
     // },
   });
 };
+export const useDeleteSong = () => {
+  const queryClient = useQueryClient();
+  return useMutation(api.artist.deleteSong, deleteSong, {
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({
+        queryKey: [api.artist.getArtistSongList],
+      });
+    },
+    // onError: (error) => {
+    //   toast.error(error?.response?.data?.message);
+    // },
+  });
+};
 export const useUpdateeArtist = () => {
   const queryClient = useQueryClient();
   return useMutation(api.artist.editArtist, updateArtist, {
@@ -111,14 +170,10 @@ export const useUpdateeArtist = () => {
 
 export const useGetArtistSongList = (id) => {
   const queryClient = useQueryClient();
-  return useQuery([api.artist.getArtistSongList,id], getArtistSongList(id), {
+  return useQuery([api.artist.getArtistSongList, id], getArtistSongList(id), {
     select: (response) => response.data,
     onError: (error) => {
       //   toastFail(error?.response?.data?.message || "Something Went Wrong");
     },
   });
 };
-
-
-
-

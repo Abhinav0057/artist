@@ -4,14 +4,14 @@ import { Link } from "react-router-dom";
 
 // Reactstrap
 import { Dropdown, DropdownToggle, DropdownMenu } from "reactstrap";
-import {useGetUserProfile} from "../services/fetchers/auth/auth"
+import { useGetUserProfile } from "../services/fetchers/auth/auth";
 
 const Header = (props) => {
   const [menu, setMenu] = useState(false);
 
   const [username, setusername] = useState("Admin");
 
-  const userProfile=useGetUserProfile()
+  const userProfile = useGetUserProfile();
 
   const handleLogoutHandler = () => {
     localStorage.setItem("token", "");
@@ -30,36 +30,40 @@ const Header = (props) => {
                 Artist Management
               </Link>
 
-             {userProfile?.isSuccess && <div className="d-flex  " >
-            {userProfile.data?.role_type==="super_admin" &&<div class="navbar-brand-box px-2">
-              <Link to="/users" class="navbar-brand">
-                Users
-              </Link>
+              {userProfile?.isSuccess && (
+                <div className="d-flex  ">
+                  {userProfile.data?.role_type === "super_admin" && (
+                    <div class="navbar-brand-box px-2">
+                      <Link to="/users" class="navbar-brand">
+                        Users
+                      </Link>
+                    </div>
+                  )}
+                  {userProfile.data?.role_type != "artist" && (
+                    <div class="navbar-brand-box px-2">
+                      <Link to="/artists" class="navbar-brand">
+                        Artists
+                      </Link>
+                    </div>
+                  )}
+                  {userProfile?.isSuccess && (
+                    <div class="navbar-brand-box px-2">
+                      {userProfile.data?.role_type === "artist" ? (
+                        <Link
+                          to={`/my/songs/${userProfile.data.id}`}
+                          className="navbar-brand"
+                        >
+                          My songs
+                        </Link>
+                      ) : (
+                        <></>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-              }
-            {userProfile.data?.role_type!="artist" &&<div class="navbar-brand-box px-2">
-              <Link to="/artists" class="navbar-brand">
-                Artists
-              </Link>
-              
-            </div>
-            }
-            {userProfile?.isSuccess && <div class="navbar-brand-box px-2">
-              {userProfile.data?.role_type==="artist"?<Link to={`/my/songs/${userProfile.data.id}`} className="navbar-brand">
-                My songs
-              </Link>:
 
-              <Link to="/artists" class="navbar-brand">
-                Songs
-              </Link>}
-            </div>
-}
-            </div>
-             }
-            </div>
-            
-       
-            
             <Dropdown
               isOpen={menu}
               toggle={() => setMenu(!menu)}
