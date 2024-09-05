@@ -12,7 +12,14 @@ from  artistbackend.pagination import MycustomPagination
 from user.permissions import *
 from django.db import connection
 import datetime
-from django.db import connection
+from django.db import connection,transaction
+from pathlib import Path
+from django.http import HttpResponse, HttpResponseNotFound
+import csv
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.utils.dateparse import parse_date
+from django.contrib.auth.hashers import make_password
+import io
 
 
 # Create your views here.
@@ -137,8 +144,9 @@ class UpdateSong(APIView):
 
 class DeleteSong(APIView):
     permission_classes = (permissions.IsAuthenticated,IsArtist)
-    def post(self,request):
-        music_id = request.data["music_id"]
+    
+    def post(self,request,pk):
+        music_id =str(pk)
         cursor=connection.cursor()
         query = "SELECT COUNT(*) FROM  music m left join artist a on a.id=m.artist_id where a.id=%s and  m.id=%s"
         
@@ -153,3 +161,91 @@ class DeleteSong(APIView):
         return Response({"message":"Data deleted successfully"},status=status.HTTP_200_OK)
 
 
+class GetSampleArtistFile(APIView):
+	permissions_classes =  (permissions.IsAuthenticated,IsArtistManager)
+	def get(self,request):
+		BASE_DIR = Path(__file__).resolve().parent.parent
+		file_location = BASE_DIR/'static/sampleartist.csv'
+		try:    
+			with open(file_location, 'r') as f:
+				file_data = f.read()
+				# sending response 
+				response = HttpResponse(file_data, content_type='text/csv')
+				response['Content-Disposition'] = 'attachment; filename="sample.csv"'
+
+		except IOError:
+			# handle file not exist case here
+			response = HttpResponseNotFound('<h1>File not exist</h1>')
+
+		return response
+class GetAllArtistFile(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        cursor = connection.cursor()
+        query = "SELECT a.id as id, a.name as name, u.dob, a.first_release_year, a.no_of_albums_released, u.id as user_id, u.email, u.gender, u.address, u.phone FROM artist a JOIN user u ON a.user_id = u.id;"
+        cursor.execute(query)
+        data = cursor.fetchall()
+
+        # Define CSV headers based on your query
+        headers = [
+            'ID', 'Name', 'DOB', 'First Release Year', 'No. of Albums Released', 
+            'User ID', 'Email', 'Gender', 'Address', 'Phone'
+        ]
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="all_artists.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(headers)
+
+        for row in data:
+            writer.writerow(row)
+
+        return response
+    
+class BulkUploadArtists(APIView):
+    permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'message': 'No file uploaded'}, status=400)
+
+        try:
+            # Read the file
+            file_data = file.read().decode('utf-8')
+            csv_reader = csv.DictReader(io.StringIO(file_data))
+
+            # Count rows
+            row_count = sum(1 for _ in csv_reader)
+            print(f"Number of rows: {row_count}")
+
+            # Re-read the file to process it
+            file.seek(0)
+            csv_reader = csv.DictReader(io.StringIO(file_data))
+
+            now = datetime.datetime.now()
+            with transaction.atomic():
+                cursor = connection.cursor()
+                for row in csv_reader:
+                    if row.get("email"):
+                        passwordconvert = make_password(row.get('password'))
+                        cursor.execute(
+							'INSERT INTO user (email, password, dob, is_superuser, is_staff, is_active, first_name, last_name, address, phone, gender, role_type, created_at, updated_at) '
+							'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+							[row.get("email"), passwordconvert, row.get("dob"), "0", "0", "1", row.get("first_name"), row.get("last_name"), row.get("address"), row.get("phone"), row.get("gender"), "artist", now, now]
+						)
+                        user_id = cursor.lastrowid
+                        cursor.execute(
+							'INSERT INTO artist (name, first_release_year, no_of_albums_released, user_id, created_at, updated_at) '
+							'VALUES (%s, %s, %s, %s, %s, %s)',
+							[f"{row.get('first_name')} {row.get('last_name')}", row.get("first_release_year"), row.get("no_of_albums_releases"), user_id, now, now]
+						)
+					
+
+            return Response({'message': 'Data uploaded and processed successfully'}, status=200)
+
+        except Exception as e:
+            return Response({'message': str(e)}, status=500)
