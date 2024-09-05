@@ -37,11 +37,23 @@ const Header = (props) => {
               </Link>
             </div>
               }
-            <div class="navbar-brand-box px-2">
+            {userProfile.data?.role_type!="artist" &&<div class="navbar-brand-box px-2">
               <Link to="/artists" class="navbar-brand">
                 Artists
               </Link>
+              
             </div>
+            }
+            {userProfile?.isSuccess && <div class="navbar-brand-box px-2">
+              {userProfile.data?.role_type==="artist"?<Link to={`/my/songs/${userProfile.data.id}`} className="navbar-brand">
+                My songs
+              </Link>:
+
+              <Link to="/artists" class="navbar-brand">
+                Songs
+              </Link>}
+            </div>
+}
             </div>
              }
             </div>

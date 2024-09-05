@@ -12,8 +12,11 @@ export const api = {
   },
   artist: {
     getArtistList: "get/artist/list/",
-    registerArtist: "register/user/",
-    editArtist: "edit/user/{:id}/",
+    registerArtist: "create/artist/",
+    editArtist: "edit/artist/{:id}/",
     deleteArtist: "delete/artist/{:id}/",
+    getArtistSongList: "get/artist/song/list/{:id}/",
+    createSong: "create/artist/song/",
+    editSong: "edit/artist/song/{:id}/",
   },
 };

@@ -18,6 +18,16 @@ const deleteArtist = (id) => {
 const updateArtist = (body) => {
   return httpClient.post(api.artist.editArtist.replace("{:id}", body.id), body);
 };
+const getArtistSongList=(id)=>()=>{
+  return httpClient.get(api.artist.getArtistSongList.replace("{:id}",id))
+}
+export const createSong = (body) => {
+  return httpClient.post(api.artist.createSong, body);
+};
+export const updateSong = (body) => {
+  return httpClient.post(api.artist.editSong.replace('{:id}',body.id), body);
+};
+
 
 export const useGetArtistList = (page) => {
   return useQuery([api.artist.getArtistList, page], getAllArtistList(page), {
@@ -34,6 +44,34 @@ export const useRegisterArtist = () => {
     onSuccess: (response) => {
       queryClient.invalidateQueries({
         queryKey: [api.artist.getArtistList],
+        exact: false, // Invalidate all pages
+      });
+    },
+    // onError: (error) => {
+    //   toast.error(error?.response?.data?.message);
+    // },
+  });
+};
+export const useCreateSong = () => {
+  const queryClient = useQueryClient();
+  return useMutation(api.artist.createSong, createSong, {
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({
+        queryKey: [api.artist.getArtistSongList],
+        exact: false, // Invalidate all pages
+      });
+    },
+    // onError: (error) => {
+    //   toast.error(error?.response?.data?.message);
+    // },
+  });
+};
+export const useUpdateSong = () => {
+  const queryClient = useQueryClient();
+  return useMutation(api.artist.editSong, updateSong, {
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({
+        queryKey: [api.artist.getArtistSongList],
         exact: false, // Invalidate all pages
       });
     },
@@ -70,3 +108,17 @@ export const useUpdateeArtist = () => {
     // },
   });
 };
+
+export const useGetArtistSongList = (id) => {
+  const queryClient = useQueryClient();
+  return useQuery([api.artist.getArtistSongList,id], getArtistSongList(id), {
+    select: (response) => response.data,
+    onError: (error) => {
+      //   toastFail(error?.response?.data?.message || "Something Went Wrong");
+    },
+  });
+};
+
+
+
+

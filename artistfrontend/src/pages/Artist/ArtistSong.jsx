@@ -1,22 +1,24 @@
 import React from "react";
 
 import {
-  useGetArtistList,
+  useGetArtistSongList,
   useDeleteArtist,
 } from "../../services/fetchers/artist/artist";
 import ReactTable from "../../components/common/ReactTable";
 import { actions } from "react-table";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import { useGetUserProfile } from "../../services/fetchers/auth/auth";
 import { Link } from "react-router-dom";
 
 function Artist() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { mutateAsync, isLoading } = useDeleteArtist();
   const handleCreateNewArtistHandler=async()=>{
-    navigate("/artist/register", { state: { userData: {},isArtist:true } });
+    navigate("/artist/songs/create", { state: { userData: {} } });
   }
 
   const handleDelete = async (rowData) => {
@@ -35,36 +37,32 @@ function Artist() {
   };
   const handleEdit = (rowData) => {
     // console.log({ state: { userData: rowData,isArtist:true } })
-    navigate("/artist/register", { state: { userData: rowData,isArtist:true } });
-  };
-  const handleSongRedirect = (rowData) => {
-    // console.log({ state: { userData: rowData,isArtist:true } })
-    navigate(`/artist/songs/${rowData.id}`)
+    navigate("/artist/songs/create", { state: { userData: rowData } });
   };
 
   let dataTableTemp = [];
   const userProfile = useGetUserProfile();
   const [currentPage, setCurrentPage] = React.useState(1);
   // useEffect(() => {
-  const artistlist = useGetArtistList(currentPage);
+    
+  const artistlist = useGetArtistSongList(id);
+  console.log(artistlist?.data)
   //  }, [currentPage]);
-  if (artistlist?.data?.results?.length > 0) {
-    dataTableTemp = artistlist?.data?.results;
+  if (artistlist?.data?.data?.length > 0) {
+    dataTableTemp = artistlist?.data?.data
   }
   const data = React.useMemo(() => [...dataTableTemp], [artistlist?.data]);
   const columnsTable = React.useMemo(
     () => [
       { Header: "ID", accessor: "id" },
-      { Header: "name", accessor: "name" },
-      { Header: "First Release", accessor: "first_release_year" },
-      { Header: "Number of Albumbs", accessor: "no_of_albums_released" },
-      //   { Header: "Phone", accessor: "phone" },
-      { Header: "DoB", accessor: "dob" },
+      { Header: "Album Name", accessor: "album_name" },
+      { Header: "Genre", accessor: "genre" },
+
       {
         Header: "Actions",
         accessor: "actions",
         Cell: ({ row }) =>
-          userProfile?.data?.role_type == "artist_manager" && (
+        
             <div>
               <button
                 className="btn btn-secondary"
@@ -75,14 +73,6 @@ function Artist() {
                 Edit
               </button>
               <button
-                className="btn btn-secondary"
-                type="primary"
-                onClick={() => handleSongRedirect(row.original)}
-                style={{ marginRight: "5px", padding: "2px 5px" }}
-              >
-                Songs
-              </button>
-              <button
                 className="btn btn-danger"
                 type="danger"
                 onClick={() => handleDelete(row.original)}
@@ -91,7 +81,7 @@ function Artist() {
                 Delete
               </button>
             </div>
-          ),
+      
       },
     ],
     [data]
@@ -103,31 +93,32 @@ function Artist() {
   };
   return (
     <div className="p-2">
+      
       <h3> Artists List</h3>
       <div className="p-2">
         {userProfile?.isSuccess &&
-          ["super_admin", "artist_manager"].includes(
+          ['artist'].includes(
             userProfile.data?.role_type
           ) && (
             <div className="d-flex justify-content-end">
              
                 <button className="btn btn-primary " type="submit"  onClick={handleCreateNewArtistHandler}>
-                  Create new artist
+                  Create new song
                 </button>
               
             </div>
           )}
       </div>
-      {artistlist?.data?.results?.length > 0 && (
+      {artistlist?.data?.data?.length > 0 && (
         <ReactTable
           data={data}
           columns={columnsTable}
           handlePageChange={handlePageChange}
-          currentPage={currentPage}
-          totalPages={artistlist?.data?.total_pages}
+          currentPage={1}
+          totalPages={artistlist?.data?.data?.length}
         ></ReactTable>
       )}
-      {artistlist?.data?.results?.length == 0 && (
+      {artistlist?.data?.data?.length == 0 && (
         <div className="text-center text-danger">No data to preview</div>
       )}
     </div>

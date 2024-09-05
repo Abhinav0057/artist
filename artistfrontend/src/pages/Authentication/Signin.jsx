@@ -18,6 +18,10 @@ import {
   useRegisterUser,
   useUpdateeUser,
 } from "../../services/fetchers/users/users";
+import {
+  useRegisterArtist,
+  useUpdateeArtist
+  } from "../../services/fetchers/artist/artist";
 
 const Signin = () => {
   const { mutateAsync, isLoading } = useSignIn();
@@ -25,6 +29,10 @@ const Signin = () => {
     useRegisterUser();
   const { mutateAsync: mutateAsyncUpdateUser, isLoading: isLoading2 } =
     useUpdateeUser();
+  const { mutateAsync: mutateAsyncCreateArtist, isLoading: isLoading3 } =
+  useRegisterArtist();
+  const { mutateAsync: mutateAsyncUpdateArtist, isLoading: isLoading4 } =
+  useUpdateeArtist();
   const {
     register,
     handleSubmit,
@@ -33,29 +41,59 @@ const Signin = () => {
     setValue,
   } = useForm();
   const location = useLocation();
-  const { userData } = location.state || {};
+  const { userData,isArtist } = location.state || {};
   React.useEffect(() => {
     if (userData?.id) {
+      if(isArtist){
+        let [first_name,last_name]=userData.name.split(" ")
+        setValue("first_name", first_name);
+        setValue("last_name", last_name);
+        setValue("no_of_albums_released", userData.no_of_albums_released);
+        setValue("first_release_year", userData.first_release_year);
+      }
+      else{
+        setValue("first_name", userData.first_name);
+        setValue("last_name", userData.last_name);
+      }
       setValue("id", userData.id);
       setValue("email", userData.email);
       setValue("role_type", userData.role_type);
-      setValue("first_name", userData.first_name);
-      setValue("last_name", userData.last_name);
+      // setValue("first_name", userData.first_name);
+      // setValue("last_name", userData.last_name);
       setValue("phone", userData.phone);
       setValue("dob", userData.dob);
       setValue("gender", userData.gender);
       setValue("address", userData.address);
     }
-  }, [userData, setValue]);
+  }, [userData, setValue,isArtist]);
 
   const navigate = useNavigate();
   const userProfile = useGetUserProfile();
   const onSubmit = async (data) => {
     try {
+      console.log(isArtist)
+      if(isArtist){
+        if(userData.id){
+          data.user_id=userData.id
+          const responseData = await mutateAsyncUpdateArtist(data);
+          toast.success("Updated successfully!");
+          navigate("/artists");
+        }
+        else{
+        // artist section work
+        // data.role_type='artist'
+        const responseData = await mutateAsyncCreateArtist(data);
+        toast.success("Created successfully!");
+        navigate("/artists");
+        }
+      }
+      else{
       if (
         userProfile?.isSuccess &&
         userProfile.data?.role_type === "super_admin"
       ) {
+        
+       
         if (data?.id) {
           const responseData = await mutateAsyncUpdateUser(data);
           toast.success("Updated successfully!");
@@ -65,11 +103,13 @@ const Signin = () => {
           toast.success("Successfully registered!");
           navigate("/users");
         }
+      
       } else {
         const responseData = await mutateAsync(data);
         toast.success("Successfully registered!");
         navigate("/login");
       }
+    }
     } catch (error) {
       if (error.response && error.response.data.data) {
         const serverErrors = error.response.data.data;
@@ -84,7 +124,7 @@ const Signin = () => {
       }
     }
   };
-
+console.log(userData,isArtist)
   return (
     <div className="account-pages my-2 pt-sm-5">
       <Container>
@@ -335,8 +375,68 @@ const Signin = () => {
                         </div>
                       </Col>
                     </Row>
+                    {isArtist &&<Row>
+                      <Col>
+                        <div className="mb-3">
+                          <label className="col-form-label fw-bold fs-6">
+                              Number of Albums Released
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control form-control-solid"
+                            {...register("no_of_albums_released", {
+                              required: "Number of albumns released is required",
+                              min:{
+                                value:0,
+                                message:"It cannot be less than 0"
+                              }
+                            })}
+                            style={{
+                              border: errors?.no_of_albums_released ? "1px solid red" : "",
+                            }}
+                          />
+                          {errors.no_of_albums_released && (
+                            <p style={{ color: "red", marginTop: "5px" }}>
+                              {errors.no_of_albums_released.message}
+                            </p>
+                          )}
+                          {errors.no_of_albums_released && (
+                            <p style={{ color: "red", marginTop: "5px" }}>
+                              {errors.no_of_albums_released[0]}
+                            </p>
+                          )}
+                        </div>
+                      </Col>
+                      <Col>
+                        <div className="mb-3">
+                          <label className="col-form-label fw-bold fs-6">
+                          First Release Year
+                          </label>
+                          <input
+                            type="number"
+                        
+                            className="form-control form-control-solid"
+                            {...register("first_release_year", {
+                                                        })}
+                            style={{
+                              border: errors?.first_release_year ? "1px solid red" : "",
+                            }}
+                          />
+                          {errors.first_release_year && (
+                            <p style={{ color: "red", marginTop: "5px" }}>
+                              {errors.first_release_year.message}
+                            </p>
+                          )}
+                          {errors.first_release_year && (
+                            <p style={{ color: "red", marginTop: "5px" }}>
+                              {errors.first_release_year[0]}
+                            </p>
+                          )}
+                        </div>
+                      </Col>
+                    </Row>}
                     {userProfile?.isSuccess &&
-                      userProfile.data?.role_type === "super_admin" && (
+                      userProfile.data?.role_type === "super_admin" &&isArtist!==true && (
                         <Row>
                           <Col>
                             <div className="mb-3">
@@ -380,9 +480,9 @@ const Signin = () => {
                       <button
                         className="btn btn-primary btn-lg"
                         type="submit"
-                        disabled={isLoading || isLoading1 || isLoading2}
+                        disabled={isLoading || isLoading1 || isLoading2||isLoading3||isLoading4}
                       >
-                        {isLoading || isLoading1 || isLoading2 ? (
+                        {isLoading || isLoading1 || isLoading2 ||isLoading3||isLoading4 ? (
                           <>
                             <Spinner size="sm" color="light" />
                           </>

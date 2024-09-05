@@ -64,8 +64,8 @@ class UpdateArtist(APIView):
 			cursor.execute(artist_query,[pk])
 			user = dictFromQuery(cursor)[0]
 			name = data['first_name'] + ' ' +  data['last_name']
-			user_id = user.user_id
-			cursor.execute('update artist set name=%s,first_release_year=%s,no_of_albums_releases=%s,updated_at=%s where id=%s',[name,data["first_release_year"],data["no_of_albums_releases"],str(now),str(pk)])
+			user_id = data['id']
+			cursor.execute('update artist set name=%s,first_release_year=%s,no_of_albums_released=%s,updated_at=%s where id=%s',[name,data["first_release_year"],data["no_of_albums_released"],str(now),str(pk)])
 			cursor.execute('update user set first_name=%s,last_name=%s,dob=%s,gender=%s,phone=%s,address=%s,updated_at=%s where id =%s',[data['first_name'],data["last_name"],data["dob"],data["gender"],data["phone"],data["address"],str(now),str(user_id)])
 			return Response({"message":"Data updated successfully"},status=status.HTTP_200_OK)
 		else:
@@ -85,12 +85,16 @@ class DeleteArtist(APIView):
 
 
 class GetSongsList(APIView):
-	permission_classes = (permissions.IsAuthenticated,IsSuperAdmin|IsArtistManager)
+	permission_classes = (permissions.IsAuthenticated,IsSuperAdmin|IsArtistManager|IsArtist)
 
 	def get(self,request, pk):
-		query = 'select * from music where artist_id ='+str(pk)+';'
 		cursor = connection.cursor()
-		cursor.execute(query)
+		artist_query = 'select * from artist where user_id=%s'
+		cursor.execute(artist_query,[pk])
+		artist_id = dictFromQuery(cursor)[0]['id']
+		query = 'select * from music where artist_id = %s;'
+		cursor = connection.cursor()
+		cursor.execute(query,[artist_id])
 		data = dictFromQuery(cursor)
 		return Response({"data":data},status=status.HTTP_200_OK)
 
@@ -107,16 +111,17 @@ class CreateSong(APIView):
 			cursor.execute(artist,[request.user.id])
 			# data = cursor.fetchone()
 			artist_data = dictFromQuery(cursor)
-			artist_id = artist_data[0].id
-			query = 'INSERT INTO music (title,genre,album_name, artist_id, created_at,updated_at) VALUES( "%s,%s,%s,%s,%s,%s");'
-			cursor.execute(query,[data["title"],data["genre"],data["album_name"],str(artist_id),+str(now),str(now)])
+			artist_id = artist_data[0]['id']
+			query = 'INSERT INTO music (title, genre, album_name, artist_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s);'
+			cursor.execute(query, [data["title"], data["genre"], data["album_name"], str(artist_id), str(now), str(now)])
+
             
 			return Response({"message":"Music Added successfully"},status=status.HTTP_200_OK)
 		else:
 			return Response({"data":serilizer.errors},status=status.HTTP_400_BAD_REQUEST)
 
 class UpdateSong(APIView):
-	permission_classes = (permissions.IsAuthenticated,)
+	permission_classes = (permissions.IsAuthenticated,IsArtist)
 
 	def post(self,request, pk):
 		data = request.data

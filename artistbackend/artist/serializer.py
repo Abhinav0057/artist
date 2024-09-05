@@ -32,7 +32,7 @@ class ArtistUpdateSerializer(serializers.Serializer):
     last_name = serializers.CharField(required=True)
     gender = serializers.CharField(required=True)
     first_release_year = serializers.CharField(required=True)
-    no_of_albums_releases = serializers.CharField(required=True)
+    no_of_albums_released = serializers.CharField(required=True)
     address = serializers.CharField(required=True)
     dob = serializers.CharField(required=True)
     phone = serializers.CharField(required=True)
