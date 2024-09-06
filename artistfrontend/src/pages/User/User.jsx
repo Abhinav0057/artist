@@ -47,7 +47,7 @@ function User() {
     () => [
       { Header: "ID", accessor: "id" },
       { Header: "First Name", accessor: "first_name" },
-      { Header: "last Name", accessor: "last_name" },
+      { Header: "Last Name", accessor: "last_name" },
       { Header: "Phone", accessor: "phone" },
       { Header: "DoB", accessor: "dob" },
       {

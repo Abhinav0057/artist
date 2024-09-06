@@ -94,7 +94,7 @@ function Artist() {
   };
   return (
     <div className="p-2">
-      <h3> Artists List</h3>
+      <h3> Song List</h3>
       <div className="p-2">
         {userProfile?.isSuccess &&
           ["artist"].includes(userProfile.data?.role_type) && (

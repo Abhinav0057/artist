@@ -130,12 +130,12 @@ function Artist() {
             userProfile.data?.role_type
           ) && (
             <div className="d-flex justify-content-end">
-              <button onClick={getSampleArtistFile}>Download Smple</button>
+              <button onClick={()=>getSampleArtistFile(false)}>Download Sample</button>
               <button onClick={() => getSampleArtistFile(true)}>
                 Download Artists
               </button>
               <div>
-                <input type="file" onChange={onFileChange} />
+                <input type="file" onChange={onFileChange} accept=".csv"/>
                 <button
                   onClick={() => {
                     bulkUploadArtist(file);

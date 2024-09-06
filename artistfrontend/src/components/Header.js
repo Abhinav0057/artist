@@ -69,17 +69,14 @@ const Header = (props) => {
               toggle={() => setMenu(!menu)}
               className="d-inline-block"
             >
-              <DropdownToggle
-                className=" d-flex align-items-center"
-                id="page-header-user-dropdown"
-                tag="button"
+              <DropdownToggle              
               >
                 <img
                   class="rounded-circle"
                   src="http://localhost:3000/logo192.png"
                   alt="Header Avatar"
-                  width="35"
-                  height="35"
+                  width="25"
+                  height="25"
                 />
               </DropdownToggle>
               <DropdownMenu className="dropdown-menu-end">

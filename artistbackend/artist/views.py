@@ -189,8 +189,8 @@ class GetAllArtistFile(APIView):
 
         # Define CSV headers based on your query
         headers = [
-            'ID', 'Name', 'DOB', 'First Release Year', 'No. of Albums Released', 
-            'User ID', 'Email', 'Gender', 'Address', 'Phone'
+            'ID', 'name', 'dob', 'first_release_year', 'no_of_albums_releases', 
+            'User ID', 'email', 'gender', 'address', 'phone'
         ]
 
         response = HttpResponse(content_type='text/csv')
@@ -214,14 +214,20 @@ class BulkUploadArtists(APIView):
             return Response({'message': 'No file uploaded'}, status=400)
 
         try:
-            # Read the file
+            # Read the file data
             file_data = file.read().decode('utf-8')
             csv_reader = csv.DictReader(io.StringIO(file_data))
+            print(csv_reader.fieldnames)
+
+            # Check if file is empty or missing required headers
+            if not csv_reader.fieldnames or 'email' not in csv_reader.fieldnames:
+                return Response({'message': 'Invalid CSV format'}, status=400)
 
             # Count rows
             row_count = sum(1 for _ in csv_reader)
-            print(f"Number of rows: {row_count}")
-
+            if row_count == 0:
+                return Response({'message': 'CSV file is empty'}, status=400)
+            
             # Re-read the file to process it
             file.seek(0)
             csv_reader = csv.DictReader(io.StringIO(file_data))
@@ -229,23 +235,47 @@ class BulkUploadArtists(APIView):
             now = datetime.datetime.now()
             with transaction.atomic():
                 cursor = connection.cursor()
+                
                 for row in csv_reader:
-                    if row.get("email"):
-                        passwordconvert = make_password(row.get('password'))
-                        cursor.execute(
-							'INSERT INTO user (email, password, dob, is_superuser, is_staff, is_active, first_name, last_name, address, phone, gender, role_type, created_at, updated_at) '
-							'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-							[row.get("email"), passwordconvert, row.get("dob"), "0", "0", "1", row.get("first_name"), row.get("last_name"), row.get("address"), row.get("phone"), row.get("gender"), "artist", now, now]
-						)
-                        user_id = cursor.lastrowid
-                        cursor.execute(
-							'INSERT INTO artist (name, first_release_year, no_of_albums_released, user_id, created_at, updated_at) '
-							'VALUES (%s, %s, %s, %s, %s, %s)',
-							[f"{row.get('first_name')} {row.get('last_name')}", row.get("first_release_year"), row.get("no_of_albums_releases"), user_id, now, now]
-						)
-					
+                    # Check required fields
+                    if not row.get("email") or not row.get("password"):
+                        continue  # Skip rows with missing email or password
+                    
+                    # Hash the password
+                    password_hashed = make_password(row.get('password'))
+
+                    # Insert user record
+                    cursor.execute(
+                        '''
+                        INSERT INTO user (email, password, dob, is_superuser, is_staff, is_active, first_name, last_name, address, phone, gender, role_type, created_at, updated_at) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ''',
+                        [
+                            row.get("email"), password_hashed, row.get("dob"), 0, 0, 1,
+                            row.get("first_name"), row.get("last_name"), row.get("address"),
+                            row.get("phone"), row.get("gender"), "artist", now, now
+                        ]
+                    )
+                    
+                    # Get last inserted user_id
+                    user_id = cursor.lastrowid
+
+                    # Insert artist record
+                    cursor.execute(
+                        '''
+                        INSERT INTO artist (name, first_release_year, no_of_albums_released, user_id, created_at, updated_at) 
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        ''',
+                        [
+                            f"{row.get('first_name')} {row.get('last_name')}",
+                            row.get("first_release_year"), row.get("no_of_albums_releases"),
+                            user_id, now, now
+                        ]
+                    )
 
             return Response({'message': 'Data uploaded and processed successfully'}, status=200)
 
+        except csv.Error as e:
+            return Response({'message': f"CSV format error: {str(e)}"}, status=400)
         except Exception as e:
-            return Response({'message': str(e)}, status=500)
+            return Response({'message': f"Server error: {str(e)}"}, status=500)

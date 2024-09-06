@@ -59,21 +59,37 @@ export const getSampleArtistFile = async (isNotSample = false) => {
     });
 };
 
-export const bulkUploadArtist = (file) => {
+export const bulkUploadArtist = async (file) => {
+  if (!file) {
+    toast.error("No file selected");
+    return;
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 
   try {
-    const response = httpClient.post(api.artist.bulkUploadArtist, formData, {
+    const response = await httpClient.post(api.artist.bulkUploadArtist, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
+
+    toast.success("File uploaded successfully");
+    console.log("File uploaded successfully:", response);
   } catch (error) {
-    console.error(error);
-    alert("Error uploading file");
+    console.error("Error uploading file:", error);
+
+    if (error.response) {
+      toast.error(`Error: ${error.response.data.message || "Failed to upload file"}`);
+    } else if (error.request) {
+      toast.error("No response from server. Please try again later.");
+    } else {
+      toast.error("Error uploading file");
+    }
   }
 };
+
 
 export const useGetArtistList = (page) => {
   return useQuery([api.artist.getArtistList, page], getAllArtistList(page), {

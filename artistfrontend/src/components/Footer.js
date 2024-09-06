@@ -7,7 +7,7 @@ const Footer = () => {
       <footer className="footer">
         <Container fluid={true}>
           <Row>
-            <Col sm={12}>
+            <Col sm={12} className="text-center">
               © {new Date().getFullYear()} Artist Management System
             </Col>
           </Row>
